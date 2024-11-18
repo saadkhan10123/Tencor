@@ -2,6 +2,7 @@
 #include <chrono>
 #include "List.h"
 #include "Tensor.h"
+#include "Tencor.h"
 #include <vector>
 
 using namespace std;
@@ -14,50 +15,19 @@ void printVector(const vector<int>& vec) {
 }
 
 void test2DTensor() {
-    // Create a 2D tensor
-    Tensor2D<int> tensor({ 3, 3 }, InitType::Default);
+    Tensor2D<double> t1 = { 
+        {1, 2} 
+    };
 
-    // Print the tensor
-    cout << "Initial Tensor:" << endl;
-    cout << tensor << endl;
+    Tensor2D<float> weights = {
+        {0.1, 0.2},
+        {0.3, 0.4}
+    };
+    Tensor2D<double> bias = {
+        { 1, 2 },
+    };
 
-    // Modify the tensor
-    tensor({ 0, 0 }, 1);
-    tensor({ 1, 1 }, 2);
-    tensor({ 2, 2 }, 3);
-
-    // Print the modified tensor
-    cout << "Modified Tensor:" << endl;
-    cout << tensor << endl;
-
-    // Create another 2D tensor
-    Tensor2D<int> tensor2({ 3, 1 }, InitType::Random);
-
-    // Test Dot Product
-    Tensor2D<int> dotProduct = Tensor2D<int>::dot(tensor2, tensor);
-
-    // Print the dot product
-    cout << "Tensor2:" << endl;
-    cout << tensor2 << endl;
-    cout << "Dot Product:" << endl;
-    cout << dotProduct << endl;
-
-    // Test addition
-    Tensor2D<int> sum = tensor + tensor2;
-
-    // Print the sum
-    cout << "Tensor:" << endl;
-    cout << tensor << endl;
-    cout << "Tensor2:" << endl;
-    cout << tensor2 << endl;
-    cout << "Sum:" << endl;
-    cout << sum << endl;
-
-    sum += tensor2;
-
-    // Print the sum
-    cout << "Sum:" << endl;
-    cout << sum << endl;
+    t1 -= bias;
 }
 
 int main() {

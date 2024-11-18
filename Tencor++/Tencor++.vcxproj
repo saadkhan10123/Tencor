@@ -130,6 +130,8 @@
     <ClCompile Include="Tencor++.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Dense.h" />
+    <ClInclude Include="Layer.h" />
     <ClInclude Include="List.h" />
     <ClInclude Include="Tencor.h" />
     <ClInclude Include="Tensor.h" />
