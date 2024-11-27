@@ -51,7 +51,7 @@ public:
         }
     }
 
-    std::vector<int> getDimensions() const {
+    std::vector<int> getShape() const {
 		return shape;
 	}
 
@@ -263,6 +263,22 @@ public:
         return *this;
     }
 
+	Tensor1D operator*(const T& other) const {
+		Tensor1D result(this->shape);
+		for (int i = 0; i < this->shape[0]; ++i) {
+			result({ i }) = data[i] * other;
+		}
+		return result;
+	}
+
+	Tensor1D operator/(const T& other) const {
+		Tensor1D result(this->shape);
+		for (int i = 0; i < this->shape[0]; ++i) {
+			result({ i }) = data[i] / other;
+		}
+		return result;
+	}
+
     void print(std::ostream& os) const override {
         os << "{ ";
         for (int i = 0; i < this->shape[0]; ++i) {
@@ -352,7 +368,7 @@ public:
 		delete[] data;
 
 		this->shape = other.shape;
-		data = new T[other.shape[0] * other.shape[1]];
+		data = new Tensor1D<T>[other.shape[0]];
 		for (int i = 0; i < other.shape[0] * other.shape[1]; ++i) {
 			data[i] = other.data[i];
 		}
@@ -528,7 +544,7 @@ public:
 	}
 
 	void setRow(const Tensor1D<T>& row, int rowNumber) {
-		if (row.getDimensions()[0] != this->shape[1]) {
+		if (row.getShape()[0] != this->shape[1]) {
 			std::cerr << "Row dimensions must match tensor dimensions\n";
 			throw std::invalid_argument("Row dimensions must match tensor dimensions");
 		}
@@ -587,19 +603,19 @@ public:
 		const Tensor2D<T>& t1 = dynamic_cast<const Tensor2D<T>&>(tensor);
 
 		if (axis == 0) {
-			Tensor1D<T> result({ t1.shape[1] });
+			Tensor2D<T> result({ 1, t1.shape[1] });
 			for (int i = 0; i < t1.shape[0]; ++i) {
 				for (int j = 0; j < t1.shape[1]; ++j) {
-					result({ j }) += t1({ i, j });
+					result({ 1, j }) += t1({ i, j });
 				}
 			}
 			return result;
 		}
 		else if (axis == 1) {
-			Tensor1D<T> result({ t1.shape[0] });
+			Tensor2D<T> result({ t1.shape[0], 1 });
 			for (int i = 0; i < t1.shape[0]; ++i) {
 				for (int j = 0; j < t1.shape[1]; ++j) {
-					result({ i }) += t1({ i, j });
+					result({ i, 1 }) += t1({ i, j });
 				}
 			}
 			return result;
@@ -610,37 +626,63 @@ public:
 		}
 	}
 
+	static T sum(const Tensor<T>& tensor) {
+		const Tensor2D<T>& t1 = dynamic_cast<const Tensor2D<T>&>(tensor);
+
+		T sum = 0;
+		for (int i = 0; i < t1.shape[0]; ++i) {
+			for (int j = 0; j < t1.shape[1]; ++j) {
+				sum += t1({ i, j });
+			}
+		}
+
+		return sum;
+	}
+
+	static Tensor2D<T> square(const Tensor<T>& tensor) {
+		const Tensor2D<T>& t1 = dynamic_cast<const Tensor2D<T>&>(tensor);
+
+		Tensor2D<T> result(t1.shape);
+		for (int i = 0; i < t1.shape[0]; ++i) {
+			for (int j = 0; j < t1.shape[1]; ++j) {
+				result({ i, j }) = t1({ i, j }) * t1({ i, j });
+			}
+		}
+
+		return result;
+	}
+
 private:
 	Tensor1D<T>* data = nullptr;
 
 	static std::vector<int> getDimensionsOp(const Tensor2D<T> A, const Tensor2D<T> B) {
-		if (A.getDimensions()[0] == B.getDimensions()[0]) {
-			if (A.getDimensions()[1] == B.getDimensions()[1]) {
-				return A.getDimensions();
+		if (A.getShape()[0] == B.getShape()[0]) {
+			if (A.getShape()[1] == B.getShape()[1]) {
+				return A.getShape();
 			}
-			else if (A.getDimensions()[1] % B.getDimensions()[1] == 0) {
-				return A.getDimensions();
+			else if (A.getShape()[1] % B.getShape()[1] == 0) {
+				return A.getShape();
 			}
-			else if (B.getDimensions()[1] % A.getDimensions()[1] == 0) {
-				return B.getDimensions();
-			}
-			else {
-				std::cerr << "Dimension mismatch";
-				throw std::invalid_argument("Dimension mismatch");
-			}
-		}
-		else if (A.getDimensions()[0] % B.getDimensions()[0] == 0) {
-			if (A.getDimensions()[1] == B.getDimensions()[1]) {
-				return B.getDimensions();
+			else if (B.getShape()[1] % A.getShape()[1] == 0) {
+				return B.getShape();
 			}
 			else {
 				std::cerr << "Dimension mismatch";
 				throw std::invalid_argument("Dimension mismatch");
 			}
 		}
-		else if (B.getDimensions()[0] % A.getDimensions()[0] == 0) {
-			if (A.getDimensions()[1] == B.getDimensions()[1]) {
-				return A.getDimensions();
+		else if (A.getShape()[0] % B.getShape()[0] == 0) {
+			if (A.getShape()[1] == B.getShape()[1]) {
+				return B.getShape();
+			}
+			else {
+				std::cerr << "Dimension mismatch";
+				throw std::invalid_argument("Dimension mismatch");
+			}
+		}
+		else if (B.getShape()[0] % A.getShape()[0] == 0) {
+			if (A.getShape()[1] == B.getShape()[1]) {
+				return A.getShape();
 			}
 			else {
 				std::cerr << "Dimension mismatch";
@@ -784,7 +826,7 @@ public:
 	}
 
 	void setMatrix(Tensor2D<T>& matrix, int matrixNumber) {
-		if (matrix.getDimensions()[0] != this->shape[1] || matrix.getDimensions()[1] != this->shape[2]) {
+		if (matrix.getShape()[0] != this->shape[1] || matrix.getShape()[1] != this->shape[2]) {
 			throw std::invalid_argument("Matrix dimensions must match tensor dimensions");
 		}
 		data[matrixNumber] = matrix;

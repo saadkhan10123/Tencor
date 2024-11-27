@@ -133,6 +133,9 @@
     <ClInclude Include="Dense.h" />
     <ClInclude Include="Layer.h" />
     <ClInclude Include="List.h" />
+    <ClInclude Include="Loss.h" />
+    <ClInclude Include="Sequential.h" />
+    <ClInclude Include="stack.h" />
     <ClInclude Include="Tencor.h" />
     <ClInclude Include="Tensor.h" />
   </ItemGroup>

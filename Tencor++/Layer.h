@@ -11,6 +11,6 @@ enum Activation {
 
 class Layer {
 public:
-	virtual Tensor2D<float> forward(Tensor2D<float>& input) = 0;
+	virtual Tensor2D<double> forward(Tensor2D<double>& input) = 0;
 	virtual int getOutputSize() = 0;
 };
