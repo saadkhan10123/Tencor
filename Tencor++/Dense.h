@@ -5,28 +5,61 @@
 class Dense : public Layer {
 public:
     Dense(int inputSize, int outputSize, Activation activation = LINEAR) : inputSize(inputSize), outputSize(outputSize) {
-        weights = Tensor2D<double>({ inputSize, outputSize }, InitType::Random);
-        biases = Tensor2D<double>({ 1, outputSize }, InitType::Random);
+        weights = Tensor2<double>({ outputSize, inputSize }, InitType::Random);
+        biases = Tensor2<double>({ outputSize, 1 }, InitType::Random);
+        this->activation = activation;
+        cache = nullptr;
     }
 
-    Tensor2D<double> forward(const Tensor2D<double>& input) const {
-        return Tensor2D<double>::dot(input, weights) + biases;
+    Tensor2<double> forward(const Tensor2<double>& input, bool training = false) override {
+        Tensor2<double> z = Tensor2<double>::dot(weights, input) + biases;
+        Tensor2<double> a = applyActivation(z, activation);
+
+        if (training) {
+            if (cache != nullptr) {
+                delete cache;
+                cache = nullptr;
+            }
+            
+			cache = new Cache();
+            cache->input = input;
+			cache->activationCache = z;
+		}
+        else if (cache != nullptr) {
+			delete cache;
+			cache = nullptr;
+		}
+
+		return a;
     }
 
-    Tensor2D<double> backward(const Tensor2D<double>& input, const Tensor2D<double>& outputGradient, double learningRate) {
-        Tensor2D<double> dW = Tensor2D<double>::dot(Tensor2D<double>::transpose(input), outputGradient) / input.shape[0];
-        Tensor2D<double> db = Tensor2D<double>::sum(outputGradient, 0) / input.shape[0];
-        Tensor2D<double> inputGradient = Tensor2D<double>::dot(outputGradient, Tensor2D<double>::transpose(weights));
+    Tensor2<double> backward(const Tensor2<double>& dA, double learningRate) override {
+		// Activation backward calculations
+		Tensor2<double> dZ = applyActivationDerivative(dA, cache->activationCache, activation);
+
+
+        // Linear backward calculations
+		Tensor2<double> APrev = cache->input;
+
+		Tensor2<double> dW = Tensor2<double>::dot(dZ, Tensor2<double>::transpose(APrev));
+		Tensor2<double> dB = Tensor2<double>::sum(dZ, 1);
+		Tensor2<double> dAPrev = Tensor2<double>::dot(Tensor2<double>::transpose(weights), dZ);
 
         weights -= dW * learningRate;
-        biases -= db * learningRate;
+        biases -= dB * learningRate;
 
-        return inputGradient;
+        return dAPrev;
     }
 
+    struct Cache {
+        Tensor2<double> input;
+        Tensor2<double> activationCache;
+    };
 private:
     int inputSize;
     int outputSize;
-    Tensor2D<double> weights;
-    Tensor2D<double> biases;
+    Tensor2<double> weights;
+    Tensor2<double> biases;
+    Activation activation;
+    Cache* cache;
 };

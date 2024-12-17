@@ -4,11 +4,9 @@
 #include <initializer_list>
 #include <cassert>
 
-
-template <typename T> class Tensor1D;
-template <typename T> class Tensor2D;
-template <typename T> class Tensor3D;
-template <typename T> class Tensor4D;
+template <typename T> class Tensor1;
+template <typename T> class Tensor2;
+template <typename T> class Tensor3;
 
 enum class InitType {
 	Default,
@@ -45,7 +43,7 @@ public:
 
         switch (tensor1.shape.size()) {
         case 1:
-            return Tensor1D<T>::dot(tensor1, tensor2);
+            return Tensor1<T>::dot(tensor1, tensor2);
         default:
             throw std::invalid_argument("Unsupported number of dimensions");
         }
@@ -60,12 +58,12 @@ public:
 };
 
 template <typename T>
-class Tensor1D : public Tensor<T> {
+class Tensor1 : public Tensor<T> {
     // Properties and methods specific to 1D tensors
 public:
-    Tensor1D() = default;
+    Tensor1() = default;
 
-    Tensor1D(const std::vector<int>& shape, InitType init = InitType::Default) : Tensor<T>(shape)
+    Tensor1(const std::vector<int>& shape, InitType init = InitType::Default) : Tensor<T>(shape)
     {
         data = new T[shape[0]];
 
@@ -82,7 +80,8 @@ public:
             break;
         case InitType::Random:
             for (int i = 0; i < shape[0]; ++i) {
-                data[i] = rand() % 100;
+				// Random initialization between -1 and 1
+				data[i] = static_cast<T>(rand() % 2000 - 1000) / 1000;
             }
             break;
         default:
@@ -90,7 +89,7 @@ public:
         }
     }
 
-    Tensor1D(const Tensor1D& other) : Tensor<T>(other.shape)
+    Tensor1(const Tensor1& other) : Tensor<T>(other.shape)
     {
         data = new T[other.shape[0]];
         for (int i = 0; i < other.shape[0]; ++i) {
@@ -99,7 +98,7 @@ public:
     }
 
 	// Add this constructor to Tensor1D class
-	Tensor1D(std::initializer_list<T> values) : Tensor<T>({ static_cast<int>(values.size()) }) {
+	Tensor1(std::initializer_list<T> values) : Tensor<T>({ static_cast<int>(values.size()) }) {
 		data = new T[values.size()];
 		int i = 0;
 		for (const T& value : values) {
@@ -107,11 +106,11 @@ public:
 		}
 	}
 
-    ~Tensor1D() {
+    ~Tensor1() {
         delete[] data;
     }
 
-    Tensor1D& operator=(const Tensor1D& other) {
+    Tensor1& operator=(const Tensor1& other) {
         if (this == &other) {
             return *this;
         }
@@ -142,9 +141,9 @@ public:
         data[indices[0]] = value;
     }
 
-    Tensor1D operator+(const Tensor1D& other) const {
+    Tensor1 operator+(const Tensor1& other) const {
         if (this->shape == other.shape) {
-			Tensor1D result(this->shape);
+			Tensor1 result(this->shape);
 
 			for (int i = 0; i < this->shape[0]; ++i) {
 				result({ i }) = data[i] + other({ i });
@@ -153,7 +152,7 @@ public:
 			return result;
 		}
 		else if (this->shape[0] % other.shape[0] == 0) {
-			Tensor1D result(this->shape);
+			Tensor1 result(this->shape);
 
 			for (int i = 0; i < this->shape[0]; ++i) {
 				result({ i }) = data[i] + other({ i % other.shape[0] });
@@ -162,7 +161,7 @@ public:
 			return result;
 		}
 		else if (other.shape[0] % this->shape[0] == 0) {
-			Tensor1D result(other.shape);
+			Tensor1 result(other.shape);
 
 			for (int i = 0; i < other.shape[0]; ++i) {
 				result({ i }) = data[i % this->shape[0]] + other({ i });
@@ -175,7 +174,7 @@ public:
 		}
 	}
 
-    Tensor1D& operator+=(const Tensor1D& other) {
+    Tensor1& operator+=(const Tensor1& other) {
         if (this->shape == other.shape) {
 			for (int i = 0; i < this->shape[0]; ++i) {
 				data[i] += other({ i });
@@ -192,9 +191,9 @@ public:
 		return *this;
 	}
 
-    Tensor1D operator-(const Tensor1D& other) const {
+    Tensor1 operator-(const Tensor1& other) const {
 		if (this->shape == other.shape) {
-			Tensor1D result(this->shape);
+			Tensor1 result(this->shape);
 
 			for (int i = 0; i < this->shape[0]; ++i) {
 				result({ i }) = data[i] - other({ i });
@@ -203,7 +202,7 @@ public:
 			return result;
 		}
 		else if (this->shape[0] % other.shape[0] == 0) {
-			Tensor1D result(this->shape);
+			Tensor1 result(this->shape);
 
 			for (int i = 0; i < this->shape[0]; ++i) {
 				result({ i }) = data[i] - other({ i % other.shape[0] });
@@ -212,7 +211,7 @@ public:
 			return result;
 		}
 		else if (other.shape[0] % this->shape[0] == 0) {
-			Tensor1D result(other.shape);
+			Tensor1 result(other.shape);
 
 			for (int i = 0; i < other.shape[0]; ++i) {
 				result({ i }) = data[i % this->shape[0]] - other({ i });
@@ -225,8 +224,16 @@ public:
 		}
     }
 
+	friend Tensor1<T> operator-(T lhs, const Tensor1<T>& rhs) {
+		Tensor1<T> result(rhs.shape);
+		for (int i = 0; i < rhs.shape[0]; ++i) {
+			result({ i }) = lhs - rhs({ i });
+		}
+		return result;
+	}
 
-    Tensor1D& operator-=(const Tensor1D& other) {
+
+    Tensor1& operator-=(const Tensor1& other) {
 		if (this->shape == other.shape) {
 			for (int i = 0; i < this->shape[0]; ++i) {
 				data[i] -= other({ i });
@@ -242,18 +249,20 @@ public:
 		}
 	}
 
-    Tensor1D operator*(const Tensor1D& other) const {
+	
+
+    Tensor1 operator*(const Tensor1& other) const {
         if (this->shape != other.shape) {
 			throw std::invalid_argument("Dimensions must match for multiplication");
 		}
-		Tensor1D result(this->shape);
+		Tensor1 result(this->shape);
         for (int i = 0; i < this->shape[0]; ++i) {
 			result({ i }) = data[i] * other({ i });
 		}
 		return result;
 	}
 
-    Tensor1D& operator*=(const Tensor1D& other) {
+    Tensor1& operator*=(const Tensor1& other) {
         if (this->shape != other.shape) {
             throw std::invalid_argument("Dimensions must match for multiplication");
         }
@@ -263,18 +272,26 @@ public:
         return *this;
     }
 
-	Tensor1D operator*(const T& other) const {
-		Tensor1D result(this->shape);
+	Tensor1 operator*(const T& other) const {
+		Tensor1 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
 			result({ i }) = data[i] * other;
 		}
 		return result;
 	}
 
-	Tensor1D operator/(const T& other) const {
-		Tensor1D result(this->shape);
+	Tensor1 operator/(const T& other) const {
+		Tensor1 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
 			result({ i }) = data[i] / other;
+		}
+		return result;
+	}
+
+	Tensor1 apply(T(*func)(T)) const {
+		Tensor1 result(this->shape);
+		for (int i = 0; i < this->shape[0]; ++i) {
+			result({ i }) = func(data[i]);
 		}
 		return result;
 	}
@@ -290,10 +307,10 @@ public:
         os << " }";
     }
 
-    static Tensor1D<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
+    static Tensor1<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
         // Implement dot product of two 1D tensors
-        const Tensor1D<T>& t1 = dynamic_cast<const Tensor1D<T>&>(tensor1);
-        const Tensor1D<T>& t2 = dynamic_cast<const Tensor1D<T>&>(tensor2);
+        const Tensor1<T>& t1 = dynamic_cast<const Tensor1<T>&>(tensor1);
+        const Tensor1<T>& t2 = dynamic_cast<const Tensor1<T>&>(tensor2);
 
         if (t1.shape[0] != t2.shape[0]) {
             if (t1.shape[0] % t2.shape[0] == 0) {
@@ -308,7 +325,7 @@ public:
             }
         }
 
-        Tensor1D<T> result(t1.shape);
+        Tensor1<T> result(t1.shape);
         for (int i = 0; i < t1.shape[0]; ++i) {
             result({ i }) = t1({ i }) * t2({ i });
         }
@@ -318,8 +335,8 @@ public:
 private:
     T* data = nullptr;
 
-    static Tensor1D<T> dotProjected(const Tensor1D<T>& t1, const Tensor1D<T>& t2) {
-        Tensor1D<T> result(t1.shape);
+    static Tensor1<T> dotProjected(const Tensor1<T>& t1, const Tensor1<T>& t2) {
+        Tensor1<T> result(t1.shape);
         for (int i = 0; i < t1.shape[0]; ++i) {
             result({ i }) = t1({ i }) * t2({ i % t2.shape[0] });
         }
@@ -328,39 +345,55 @@ private:
 };
 
 template <typename T>
-class Tensor2D : public Tensor<T> {
+class Tensor2 : public Tensor<T> {
 public:
-	Tensor2D() = default;
+	Tensor2() = default;
 
-	Tensor2D(const std::vector<int>& shape, InitType init = InitType::Default) : Tensor<T>(shape)
+	Tensor2(const std::vector<int>& shape, InitType init = InitType::Default) : Tensor<T>(shape)
 	{
-		data = new Tensor1D<T>[shape[0]];
+		data = new Tensor1<T>[shape[0]];
 		for (int i = 0; i < shape[0]; ++i) {
-			data[i] = Tensor1D<T>({ shape[1] }, init);
+			data[i] = Tensor1<T>({ shape[1] }, init);
 		}
 	}
 
-	Tensor2D(const Tensor2D& other) : Tensor<T>(other.shape)
+	Tensor2(const Tensor2& other) : Tensor<T>(other.shape)
 	{
-		data = new Tensor1D<T>[other.shape[0]];
+		data = new Tensor1<T>[other.shape[0]];
 		for (int i = 0; i < other.shape[0]; ++i) {
 			data[i] = other.data[i];
 		}
 	}
 
-	Tensor2D(std::initializer_list<std::initializer_list<T>> values) : Tensor<T>({ static_cast<int>(values.size()), static_cast<int>(values.begin()->size()) }) {
-		data = new Tensor1D<T>[values.size()];
+	Tensor2(std::initializer_list<std::initializer_list<T>> values) : Tensor<T>({ static_cast<int>(values.size()), static_cast<int>(values.begin()->size()) }) {
+		data = new Tensor1<T>[values.size()];
 		int i = 0;
 		for (const std::initializer_list<T>& row : values) {
-			data[i++] = Tensor1D<T>(row);
+			data[i++] = Tensor1<T>(row);
 		}
 	}
 
-	~Tensor2D() {
+	Tensor2(const std::vector<int>& shape, const Tensor1<T>& data) : Tensor<T>(shape) {
+		if (shape[0] == 1) {
+			this->data = new Tensor1<T>[shape[0]];
+			this->data[0] = data;
+		}
+		else if (shape[1] == 1) {
+			this->data = new Tensor1<T>[shape[0]];
+			for (int i = 0; i < shape[0]; ++i) {
+				this->data[i] = Tensor1<T>{ { 1 }, data({ i }) };
+			}
+		}
+		else {
+			throw std::invalid_argument("Invalid shape for data");
+		}
+	}
+
+	~Tensor2() {
 		delete[] data;
 	}
 
-	Tensor2D& operator=(const Tensor2D& other) {
+	Tensor2& operator=(const Tensor2& other) {
 		if (this == &other) {
 			return *this;
 		}
@@ -368,8 +401,8 @@ public:
 		delete[] data;
 
 		this->shape = other.shape;
-		data = new Tensor1D<T>[other.shape[0]];
-		for (int i = 0; i < other.shape[0] * other.shape[1]; ++i) {
+		data = new Tensor1<T>[other.shape[0]];
+		for (int i = 0; i < other.shape[0]; ++i) {
 			data[i] = other.data[i];
 		}
 
@@ -391,7 +424,7 @@ public:
 		data[indices[0]]({ indices[1] }) = value;
 	}
 
-	Tensor2D operator+(const Tensor2D& other) const {
+	Tensor2 operator+(const Tensor2& other) const {
 
 		std::vector<int> resultDimensions;
 		try {
@@ -402,7 +435,7 @@ public:
 			throw std::invalid_argument("Dimensions must match for addition");
 		}
 
-		Tensor2D result(resultDimensions);
+		Tensor2 result(resultDimensions);
 
 		if (this->shape == other.shape) {
 			for (int i = 0; i < this->shape[0]; ++i) {
@@ -411,6 +444,7 @@ public:
 		}
 		else if (this->shape[0] % other.shape[0] == 0) {
 			for (int i = 0; i < this->shape[0]; ++i) {
+				// std::cout << this->shape[0] << this->shape[1] << " " << other.shape[0] << other.shape[1] << std::endl;
 				result.data[i] = data[i] + other.data[i % other.shape[0]];
 			}
 		}
@@ -426,7 +460,15 @@ public:
 		return result;
 	}
 
-	Tensor2D& operator+=(const Tensor2D& other) {
+	Tensor2 operator+(const T& other) const {
+		Tensor2 result(this->shape);
+		for (int i = 0; i < this->shape[0]; ++i) {
+			result.data[i] = data[i] + other;
+		}
+		return result;
+	}
+
+	Tensor2& operator+=(const Tensor2& other) {
 		if (this->shape == other.shape) {
 			for (int i = 0; i < this->shape[0]; ++i) {
 				data[i] += other.data[i];
@@ -444,7 +486,7 @@ public:
 		return *this;
 	}
 
-	Tensor2D operator-(const Tensor2D& other) const {
+	Tensor2 operator-(const Tensor2& other) const {
 		std::vector<int> resultDimensions;
 		try {
 			resultDimensions = getDimensionsOp(*this, other);
@@ -454,7 +496,7 @@ public:
 			throw std::invalid_argument("Dimensions must match for subtraction");
 		}
 
-		Tensor2D result(resultDimensions);
+		Tensor2 result(resultDimensions);
 
 		if (this->shape == other.shape) {
 			for (int i = 0; i < this->shape[0]; ++i) {
@@ -478,7 +520,15 @@ public:
 		return result;
 	}
 
-	Tensor2D& operator-=(const Tensor2D& other) {
+	friend Tensor2<T> operator-(T lhs, const Tensor2<T>& rhs) {
+		Tensor2<T> result(rhs.shape);
+		for (int i = 0; i < rhs.shape[0]; ++i) {
+			result.data[i] = lhs - rhs.data[i];
+		}
+		return result;
+	}
+
+	Tensor2& operator-=(const Tensor2& other) {
 		if (this->shape == other.shape) {
 			for (int i = 0; i < this->shape[0]; ++i) {
 				data[i] -= other.data[i];
@@ -495,27 +545,26 @@ public:
 		return *this;
 	}
 
-
-	Tensor2D operator*(const T& other) const {
-		Tensor2D result(this->shape);
+	Tensor2 operator*(const T& other) const {
+		Tensor2 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
 			result.data[i] = data[i] * other;
 		}
 		return result;
 	}
 
-	Tensor2D operator*(const Tensor2D& other) const {
+	Tensor2 operator*(const Tensor2& other) const {
 		if (this->shape != other.shape) {
 			throw std::invalid_argument("Dimensions must match for multiplication");
 		}
-		Tensor2D result(this->shape);
+		Tensor2 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
 			result.data[i] = data[i] * other.data[i];
 		}
 		return result;
 	}
 
-	Tensor2D& operator*=(const Tensor2D& other) {
+	Tensor2& operator*=(const Tensor2& other) {
 		if (this->shape != other.shape) {
 			throw std::invalid_argument("Dimensions must match for multiplication");
 		}
@@ -525,8 +574,8 @@ public:
 		return *this;
 	}
 
-	Tensor2D operator/(const T& other) const {
-		Tensor2D result(this->shape);
+	Tensor2 operator/(const T& other) const {
+		Tensor2 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
 			result.data[i] = data[i] / other;
 		}
@@ -543,7 +592,7 @@ public:
 		os << "}";
 	}
 
-	void setRow(const Tensor1D<T>& row, int rowNumber) {
+	void setRow(const Tensor1<T>& row, int rowNumber) {
 		if (row.getShape()[0] != this->shape[1]) {
 			std::cerr << "Row dimensions must match tensor dimensions\n";
 			throw std::invalid_argument("Row dimensions must match tensor dimensions");
@@ -551,7 +600,7 @@ public:
 		this->data[rowNumber] = row;
 	}
 
-	Tensor1D<T> getRow(int rowNumber) const {
+	Tensor1<T> getRow(int rowNumber) const {
 		if (rowNumber < 0 || rowNumber >= this->shape[0]) {
 			std::cerr << "Row index out of range\n";
 			throw std::out_of_range("Row index out of range");
@@ -560,17 +609,27 @@ public:
 		return data[rowNumber];
 	}
 
-	static Tensor2D<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
+	Tensor2 apply(T(*func)(T)) const {
+		Tensor2 result(this->shape);
+		for (int i = 0; i < this->shape[0]; ++i) {
+			for (int j = 0; j < this->shape[1]; ++j) {
+				result({ i, j }) = func(data[i]({ j }));
+			}
+		}
+		return result;
+	}
+
+	static Tensor2<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
 		// Implement dot product of two 2D tensors
-		const Tensor2D<T>& t1 = dynamic_cast<const Tensor2D<T>&>(tensor1);
-		const Tensor2D<T>& t2 = dynamic_cast<const Tensor2D<T>&>(tensor2);
+		const Tensor2<T>& t1 = dynamic_cast<const Tensor2<T>&>(tensor1);
+		const Tensor2<T>& t2 = dynamic_cast<const Tensor2<T>&>(tensor2);
 
 		if (tensor1.shape[1] != tensor2.shape[0]) {
 			std::cerr << "Dimension mismath!\n";
 			throw std::invalid_argument("Dimensions must match for dot product");
 		}
 
-		Tensor2D<T> result({ tensor1.shape[0], tensor2.shape[1] });
+		Tensor2<T> result({ tensor1.shape[0], tensor2.shape[1] });
 
 		for (int i = 0; i < tensor1.shape[0]; ++i) {
 			for (int j = 0; j < tensor2.shape[1]; ++j) {
@@ -585,10 +644,10 @@ public:
 		return result;
 	}
 
-	static Tensor2D<T> transpose(const Tensor<T>& tensor) {
-		const Tensor2D<T>& t1 = dynamic_cast<const Tensor2D<T>&>(tensor);
+	static Tensor2<T> transpose(const Tensor<T>& tensor) {
+		const Tensor2<T>& t1 = dynamic_cast<const Tensor2<T>&>(tensor);
 
-		Tensor2D<T> result({ t1.shape[1], t1.shape[0] });
+		Tensor2<T> result({ t1.shape[1], t1.shape[0] });
 
 		for (int i = 0; i < t1.shape[0]; ++i) {
 			for (int j = 0; j < t1.shape[1]; ++j) {
@@ -599,24 +658,26 @@ public:
 		return result;
 	}
 
-	static Tensor2D<T> sum(const Tensor<T>& tensor, int axis) {
-		const Tensor2D<T>& t1 = dynamic_cast<const Tensor2D<T>&>(tensor);
-
+	static Tensor2<T> sum(const Tensor2<T>& tensor, int axis) {
 		if (axis == 0) {
-			Tensor2D<T> result({ 1, t1.shape[1] });
-			for (int i = 0; i < t1.shape[0]; ++i) {
-				for (int j = 0; j < t1.shape[1]; ++j) {
-					result({ 1, j }) += t1({ i, j });
+			Tensor2<T> result({ 1, tensor.shape[1] });
+			for (int i = 0; i < tensor.shape[1]; ++i) {
+				T sum = 0;
+				for (int j = 0; j < tensor.shape[0]; ++j) {
+					sum += tensor({ j, i });
 				}
+				result({ 0, i }) = sum;
 			}
 			return result;
 		}
 		else if (axis == 1) {
-			Tensor2D<T> result({ t1.shape[0], 1 });
-			for (int i = 0; i < t1.shape[0]; ++i) {
-				for (int j = 0; j < t1.shape[1]; ++j) {
-					result({ i, 1 }) += t1({ i, j });
+			Tensor2<T> result({ tensor.shape[0], 1 });
+			for (int i = 0; i < tensor.shape[0]; ++i) {
+				T sum = 0;
+				for (int j = 0; j < tensor.shape[1]; ++j) {
+					sum += tensor({ i, j });
 				}
+				result({ i, 0 }) = sum;
 			}
 			return result;
 		}
@@ -626,8 +687,14 @@ public:
 		}
 	}
 
+	static Tensor2<T> sum(const Tensor<T>& tensor, int axis) {
+		const Tensor2<T>& t1 = dynamic_cast<const Tensor2<T>&>(tensor);
+
+		return sum(t1, axis);
+	}
+
 	static T sum(const Tensor<T>& tensor) {
-		const Tensor2D<T>& t1 = dynamic_cast<const Tensor2D<T>&>(tensor);
+		const Tensor2<T>& t1 = dynamic_cast<const Tensor2<T>&>(tensor);
 
 		T sum = 0;
 		for (int i = 0; i < t1.shape[0]; ++i) {
@@ -639,10 +706,10 @@ public:
 		return sum;
 	}
 
-	static Tensor2D<T> square(const Tensor<T>& tensor) {
-		const Tensor2D<T>& t1 = dynamic_cast<const Tensor2D<T>&>(tensor);
+	static Tensor2<T> square(const Tensor<T>& tensor) {
+		const Tensor2<T>& t1 = dynamic_cast<const Tensor2<T>&>(tensor);
 
-		Tensor2D<T> result(t1.shape);
+		Tensor2<T> result(t1.shape);
 		for (int i = 0; i < t1.shape[0]; ++i) {
 			for (int j = 0; j < t1.shape[1]; ++j) {
 				result({ i, j }) = t1({ i, j }) * t1({ i, j });
@@ -653,9 +720,9 @@ public:
 	}
 
 private:
-	Tensor1D<T>* data = nullptr;
+	Tensor1<T>* data = nullptr;
 
-	static std::vector<int> getDimensionsOp(const Tensor2D<T> A, const Tensor2D<T> B) {
+	static std::vector<int> getDimensionsOp(const Tensor2<T> A, const Tensor2<T> B) {
 		if (A.getShape()[0] == B.getShape()[0]) {
 			if (A.getShape()[1] == B.getShape()[1]) {
 				return A.getShape();
@@ -673,7 +740,7 @@ private:
 		}
 		else if (A.getShape()[0] % B.getShape()[0] == 0) {
 			if (A.getShape()[1] == B.getShape()[1]) {
-				return B.getShape();
+				return A.getShape();
 			}
 			else {
 				std::cerr << "Dimension mismatch";
@@ -682,7 +749,7 @@ private:
 		}
 		else if (B.getShape()[0] % A.getShape()[0] == 0) {
 			if (A.getShape()[1] == B.getShape()[1]) {
-				return A.getShape();
+				return B.getShape();
 			}
 			else {
 				std::cerr << "Dimension mismatch";
@@ -699,29 +766,29 @@ private:
 };
 
 template <typename T>
-class Tensor3D : public Tensor<T> {
+class Tensor3 : public Tensor<T> {
 public:
-	Tensor3D(const std::vector<int>& shape, InitType init = InitType::Default) : Tensor<T>(shape)
+	Tensor3(const std::vector<int>& shape, InitType init = InitType::Default) : Tensor<T>(shape)
 	{
-		data = new Tensor2D<T>[shape[0]];
+		data = new Tensor2<T>[shape[0]];
 		for (int i = 0; i < shape[0]; ++i) {
-			data[i] = Tensor2D<T>({ shape[1], shape[2] }, init);
+			data[i] = Tensor2<T>({ shape[1], shape[2] }, init);
 		}
 	}
 
-	Tensor3D(const Tensor3D& other) : Tensor<T>(other.shape)
+	Tensor3(const Tensor3& other) : Tensor<T>(other.shape)
 	{
-		data = new Tensor2D<T>[other.shape[0]];
+		data = new Tensor2<T>[other.shape[0]];
 		for (int i = 0; i < other.shape[0]; ++i) {
 			data[i] = other.data[i];
 		}
 	}
 
-	~Tensor3D() {
+	~Tensor3() {
 		delete[] data;
 	}
 
-	Tensor3D& operator=(const Tensor3D& other) {
+	Tensor3& operator=(const Tensor3& other) {
 		if (this == &other) {
 			return *this;
 		}
@@ -729,7 +796,7 @@ public:
 		delete[] data;
 
 		this->shape = other.shape;
-		data = new Tensor2D<T>[other.shape[0]];
+		data = new Tensor2<T>[other.shape[0]];
 		for (int i = 0; i < other.shape[0]; ++i) {
 			data[i] = other.data[i];
 		}
@@ -752,18 +819,18 @@ public:
 		data[indices[0]]({ indices[1], indices[2] }) = value;
 	}
 
-	Tensor3D operator+(const Tensor3D& other) const {
+	Tensor3 operator+(const Tensor3& other) const {
 		if (this->shape != other.shape) {
 			throw std::invalid_argument("Dimensions must match for addition");
 		}
-		Tensor3D result(this->shape);
+		Tensor3 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
 			result.data[i] = data[i] + other.data[i];
 		}
 		return result;
 	}
 
-	Tensor3D& operator+=(const Tensor3D& other) {
+	Tensor3& operator+=(const Tensor3& other) {
 		if (this->shape != other.shape) {
 			throw std::invalid_argument("Dimensions must match for addition");
 		}
@@ -773,18 +840,18 @@ public:
 		return *this;
 	}
 
-	Tensor3D operator-(const Tensor3D& other) const {
+	Tensor3 operator-(const Tensor3& other) const {
 		if (this->shape != other.shape) {
 			throw std::invalid_argument("Dimensions must match for subtraction");
 		}
-		Tensor3D result(this->shape);
+		Tensor3 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
 			result.data[i] = data[i] - other.data[i];
 		}
 		return result;
 	}
 
-	Tensor3D& operator-=(const Tensor3D& other) {
+	Tensor3& operator-=(const Tensor3& other) {
 		if (this->shape != other.shape) {
 			throw std::invalid_argument("Dimensions must match for subtraction");
 		}
@@ -794,18 +861,18 @@ public:
 		return *this;
 	}
 
-	Tensor3D operator*(const Tensor3D& other) const {
+	Tensor3 operator*(const Tensor3& other) const {
 		if (this->shape != other.shape) {
 			throw std::invalid_argument("Dimensions must match for multiplication");
 		}
-		Tensor3D result(this->shape);
+		Tensor3 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
 			result.data[i] = data[i] * other.data[i];
 		}
 		return result;
 	}
 
-	Tensor3D& operator*=(const Tensor3D& other) {
+	Tensor3& operator*=(const Tensor3& other) {
 		if (this->shape != other.shape) {
 			throw std::invalid_argument("Dimensions must match for multiplication");
 		}
@@ -825,14 +892,14 @@ public:
 		os << "}";
 	}
 
-	void setMatrix(Tensor2D<T>& matrix, int matrixNumber) {
+	void setMatrix(Tensor2<T>& matrix, int matrixNumber) {
 		if (matrix.getShape()[0] != this->shape[1] || matrix.getShape()[1] != this->shape[2]) {
 			throw std::invalid_argument("Matrix dimensions must match tensor dimensions");
 		}
 		data[matrixNumber] = matrix;
 	}
 
-	Tensor2D<T> getMatrix(int matrixNumber) {
+	Tensor2<T> getMatrix(int matrixNumber) {
 		if (matrixNumber < 0 || matrixNumber >= this->shape[0]) {
 			throw std::out_of_range("Matrix index out of range");
 		}
@@ -840,16 +907,13 @@ public:
 		return data[matrixNumber];
 	}
 
-	static Tensor3D<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
+	static Tensor3<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
 		// Implement dot product of two 3D tensors
-		const Tensor3D<T>& t1 = dynamic_cast<const Tensor3D<T>&>(tensor1);
-		const Tensor3D<T>& t2 = dynamic_cast<const Tensor3D<T>&>(tensor2);
-
-
+		const Tensor3<T>& t1 = dynamic_cast<const Tensor3<T>&>(tensor1);
+		const Tensor3<T>& t2 = dynamic_cast<const Tensor3<T>&>(tensor2);
 	}
 
 private:
-	Tensor2D<T>* data = nullptr;
+	Tensor2<T>* data = nullptr;
 
 };
-

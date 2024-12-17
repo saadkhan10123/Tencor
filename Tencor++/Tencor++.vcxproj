@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="mnist_digits.cpp" />
     <ClCompile Include="Tencor++.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -136,7 +137,6 @@
     <ClInclude Include="Loss.h" />
     <ClInclude Include="Sequential.h" />
     <ClInclude Include="stack.h" />
-    <ClInclude Include="Tencor.h" />
     <ClInclude Include="Tensor.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

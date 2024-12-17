@@ -18,12 +18,12 @@
     <ClCompile Include="Tencor++.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mnist_digits.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tencor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Tensor.h">

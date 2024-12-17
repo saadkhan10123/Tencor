@@ -1,20 +1,11 @@
 #pragma once
 #include <iostream>
-#include "stack.h"
 #include "List.h"
 #include "Layer.h"
 #include "Loss.h"
 #include <initializer_list>
 
-// A struct to store the cache for backpropagation
-struct cache {
-	Tensor2D<double> input;
-	Tensor2D<double> output;
-	Tensor2D<double> activation;
-	Layer *layer;
-};
-
-class Sequential : public Layer {
+class Sequential {
 public:
 	Sequential() {
 		layers = new List<Layer*>();
@@ -34,41 +25,36 @@ public:
 		}
 	}
 
-	Tensor2D<double> forward(Tensor2D<double> input) {
-		Tensor2D<double> output = input;
+	Tensor2<double> forward(Tensor2<double> input, bool training = false) {
+		Tensor2<double> output = input;
 
 		for (auto layer : *layers) {
-			output = layer->forward(output);
+			output = layer->forward(output, training);
 		}
 
 		return output;
 	}
 
-	void forward(Tensor2D<double> input, Stack<cache*>& cacheStack) {
-		Tensor2D<double> output = input;
+	void backward(Tensor2<double> grad, double learningRate) {
+		Node<Layer*>* node = layers->getTail();
 
-		for (auto layer : *layers) {
-			cache* c = new cache();
-			c->input = output;
-			c->output = output;
-			c->activation = output;
-			c->layer = layer;
-			cacheStack.push(c);
-			output = layer->forward(output);
+		while (node != nullptr) {
+			grad = node->data->backward(grad, learningRate);
+			node = node->prev;
 		}
 	}
 
-	void backward(Tensor2D<double> grad, Stack<cache*>& cacheStack) {
-		Tensor2D<double> gradient = grad;
-
-		while (!cacheStack.isEmpty()) {
-			cache* c = cacheStack.pop();
-			
-		}
-
-
+	void compile(Loss<double>* loss) {
+		lossFunc = loss;
 	}
 
+	void fit(Tensor2<double> input, Tensor2<double> target, int epochs, double learningRate) {
+		for (int i = 0; i < epochs; i++) {
+			Tensor2<double> output = forward(input, true);
+			Tensor2<double> grad = lossFunc->backward(output, target);
+			backward(grad, learningRate);
+		}
+	}
 
 private:
 	List<Layer*>* layers;

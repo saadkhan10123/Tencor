@@ -109,6 +109,13 @@ public:
         return Iterator(nullptr);
     }
 
+    Node<T>* getHead() const {
+		return head;
+	}
+
+    Node<T>* getTail() const {
+		return tail;
+	}
 private:
     Node<T>* head;
     Node<T>* tail;
