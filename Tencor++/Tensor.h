@@ -141,6 +141,10 @@ public:
         data[indices[0]] = value;
     }
 
+	T& operator[] (int index) {
+		return data[index];
+	}
+
     Tensor1 operator+(const Tensor1& other) const {
         if (this->shape == other.shape) {
 			Tensor1 result(this->shape);
@@ -232,6 +236,13 @@ public:
 		return result;
 	}
 
+    Tensor1 operator-() const {
+        Tensor1 result(this->shape);
+        for (int i = 0; i < this->shape[0]; ++i) {
+            result({ i }) = -data[i];
+        }
+        return result;
+    }
 
     Tensor1& operator-=(const Tensor1& other) {
 		if (this->shape == other.shape) {
@@ -276,6 +287,17 @@ public:
 		Tensor1 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
 			result({ i }) = data[i] * other;
+		}
+		return result;
+	}
+
+	Tensor1 operator/(const Tensor1& other) const {
+		if (this->shape != other.shape) {
+			throw std::invalid_argument("Dimensions must match for division");
+		}
+		Tensor1 result(this->shape);
+		for (int i = 0; i < this->shape[0]; ++i) {
+			result({ i }) = data[i] / other({ i });
 		}
 		return result;
 	}
@@ -331,6 +353,40 @@ public:
         }
         return result;
     }
+
+	static Tensor1<T> max(const Tensor1<T>& tensor) {
+		Tensor1<T> result({ 1 });
+		T maxVal = tensor({ 0 });
+		for (int i = 1; i < tensor.shape[0]; ++i) {
+			if (tensor({ i }) > maxVal) {
+				maxVal = tensor({ i });
+			}
+		}
+		result({ 0 }) = maxVal;
+		return result;
+	}
+
+	static Tensor1<T> argmax(const Tensor1<T>& tensor) {
+		Tensor1<T> result({ 1 });
+		T maxVal = tensor({ 0 });
+		int maxIndex = 0;
+		for (int i = 1; i < tensor.shape[0]; ++i) {
+			if (tensor({ i }) > maxVal) {
+				maxVal = tensor({ i });
+				maxIndex = i;
+			}
+		}
+		result({ 0 }) = maxIndex;
+		return result;
+	}
+
+	static Tensor1<T> log(const Tensor1<T>& tensor) {
+		Tensor1<T> result(tensor.shape);
+		for (int i = 0; i < tensor.shape[0]; ++i) {
+			result({ i }) = std::log(tensor({ i }));
+		}
+		return result;
+	}
 
 private:
     T* data = nullptr;
@@ -422,6 +478,10 @@ public:
 			throw std::out_of_range("Index out of range");
 		}
 		data[indices[0]]({ indices[1] }) = value;
+	}
+
+	Tensor1<T>& operator[] (int index) {
+		return data[index];
 	}
 
 	Tensor2 operator+(const Tensor2& other) const {
@@ -528,6 +588,14 @@ public:
 		return result;
 	}
 
+	Tensor2 operator-() const {
+		Tensor2 result(this->shape);
+		for (int i = 0; i < this->shape[0]; ++i) {
+			result.data[i] = -data[i];
+		}
+		return result;
+	}
+
 	Tensor2& operator-=(const Tensor2& other) {
 		if (this->shape == other.shape) {
 			for (int i = 0; i < this->shape[0]; ++i) {
@@ -574,6 +642,27 @@ public:
 		return *this;
 	}
 
+	Tensor2 operator/(const Tensor2& other) const {
+		if (this->shape == other.shape || this->shape[0] % other.shape[0] == 0) {
+			Tensor2 result(this->shape);
+			for (int i = 0; i < this->shape[0]; ++i) {
+				result.data[i] = data[i] / other.data[i % other.shape[0]];
+			}
+			return result;
+		}
+		else if (other.shape[0] % this->shape[0] == 0) {
+			Tensor2 result(other.shape);
+			for (int i = 0; i < other.shape[0]; ++i) {
+				result.data[i] = data[i % this->shape[0]] / other.data[i];
+			}
+			return result;
+		}
+		else {
+			std::cerr << "Dimensions must match for division\n";
+			throw std::invalid_argument("Dimensions must match for division");
+		}
+	}
+
 	Tensor2 operator/(const T& other) const {
 		Tensor2 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
@@ -612,9 +701,7 @@ public:
 	Tensor2 apply(T(*func)(T)) const {
 		Tensor2 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
-			for (int j = 0; j < this->shape[1]; ++j) {
-				result({ i, j }) = func(data[i]({ j }));
-			}
+			result.data[i] = data[i].apply(func);
 		}
 		return result;
 	}
@@ -718,6 +805,73 @@ public:
 
 		return result;
 	}
+
+	static Tensor2<T> max(const Tensor2<T>& tensor, int axis = 0) {
+		if (axis == 0) {
+			Tensor2<T> result({ 1, tensor.shape[1] });
+			for (int i = 0; i < tensor.shape[1]; ++i) {
+				T maxVal = tensor({ 0, i });
+				for (int j = 1; j < tensor.shape[0]; ++j) {
+					if (tensor({ j, i }) > maxVal) {
+						maxVal = tensor({ j, i });
+					}
+				}
+				result({ 0, i }) = maxVal;
+			}
+			return result;
+		}
+		else if (axis == 1) {
+			Tensor2<T> result({ tensor.shape[0], 1 });
+			for (int i = 0; i < tensor.shape[0]; ++i) {
+				result({ i, 0 }) = Tensor1<T>::max(tensor.getRow(i))({ 0 });
+			}
+			return result;
+		}
+		else {
+			std::cerr << "Invalid axis\n";
+			throw std::invalid_argument("Invalid axis");
+		}
+	}
+
+	static Tensor2<T> argmax(const Tensor2<T>& tensor, int axis = 0) {
+		if (axis == 0) {
+			Tensor2<T> result({ 1, tensor.shape[1] });
+			for (int i = 0; i < tensor.shape[1]; ++i) {
+				T maxVal = tensor({ 0, i });
+				int maxIndex = 0;
+				for (int j = 1; j < tensor.shape[0]; ++j) {
+					if (tensor({ j, i }) > maxVal) {
+						maxVal = tensor({ j, i });
+						maxIndex = j;
+					}
+				}
+				result({ 0, i }) = maxIndex;
+			}
+			return result;
+		}
+		else if (axis == 1) {
+			Tensor2<T> result({ tensor.shape[0], 1 });
+			for (int i = 0; i < tensor.shape[0]; ++i) {
+				result({ i, 0 }) = Tensor1<T>::argmax(tensor.getRow(i))({ 0 });
+			}
+			return result;
+		}
+		else {
+			std::cerr << "Invalid axis\n";
+			throw std::invalid_argument("Invalid axis");
+		}
+	}
+
+	static Tensor2<T> log(const Tensor2<T>& tensor) {
+		Tensor2<T> result(tensor.shape);
+		for (int i = 0; i < tensor.shape[0]; ++i) {
+			for (int j = 0; j < tensor.shape[1]; ++j) {
+				result({ i, j }) = std::log(tensor({ i, j }));
+			}
+		}
+		return result;
+	}
+
 
 private:
 	Tensor1<T>* data = nullptr;
