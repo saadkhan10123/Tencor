@@ -38,6 +38,7 @@ public:
     static Tensor<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
         // Dot product of two tensors
         if (tensor1.shape.size() != tensor2.shape.size()) {
+			std::cerr << "Tensors must have the same number of dimensions\n";
             throw std::invalid_argument("Tensors must have the same number of dimensions");
         }
 
@@ -45,6 +46,7 @@ public:
         case 1:
             return Tensor1<T>::dot(tensor1, tensor2);
         default:
+			std::cerr << "Unsupported number of dimensions\n";
             throw std::invalid_argument("Unsupported number of dimensions");
         }
     }
@@ -85,6 +87,7 @@ public:
             }
             break;
         default:
+			std::cerr << "Unsupported initialization type\n";
             throw std::invalid_argument("Unsupported initialization type");
         }
     }
@@ -136,6 +139,7 @@ public:
 
     void operator()(const std::vector<int>& indices, const T& value) override {
         if (indices.size() != 1 || indices[0] < 0 || indices[0] >= this->shape[0]) {
+			std::cerr << "Index out of range\n";
             throw std::out_of_range("Index out of range");
         }
         data[indices[0]] = value;
@@ -190,6 +194,7 @@ public:
 			}
 		}
 		else {
+			std::cerr << "Dimensions must match for addition\n";
 			throw std::invalid_argument("Dimensions must match for addition");
 		}
 		return *this;
@@ -224,6 +229,7 @@ public:
 			return result;
 		}
 		else {
+			std::cerr << "Dimensions must match for subtraction\n";
 			throw std::invalid_argument("Dimensions must match for subtraction");
 		}
     }
@@ -256,6 +262,7 @@ public:
 			}
 		}
 		else {
+			std::cerr << "Dimensions must match for subtraction\n";
 			throw std::invalid_argument("Dimensions must match for subtraction");
 		}
 	}
@@ -264,6 +271,7 @@ public:
 
     Tensor1 operator*(const Tensor1& other) const {
         if (this->shape != other.shape) {
+			std::cerr << "Dimensions must match for multiplication";
 			throw std::invalid_argument("Dimensions must match for multiplication");
 		}
 		Tensor1 result(this->shape);
@@ -310,6 +318,13 @@ public:
 		return result;
 	}
 
+	Tensor1& operator/=(const T& other) {
+		for (int i = 0; i < this->shape[0]; ++i) {
+			data[i] /= other;
+		}
+		return *this;
+	}
+
 	Tensor1 apply(T(*func)(T)) const {
 		Tensor1 result(this->shape);
 		for (int i = 0; i < this->shape[0]; ++i) {
@@ -334,6 +349,14 @@ public:
 		Tensor1 result(resultShape);
 		for (int i = start; i < end; ++i) {
 			result({ i - start }) = data[i];
+		}
+		return result;
+	}
+
+	Tensor2<T> squeeze() const {
+		Tensor2<T> result({ 1, this->shape[0] });
+		for (int i = 0; i < this->shape[0]; ++i) {
+			result({ 0, i }) = data[i];
 		}
 		return result;
 	}
@@ -678,6 +701,13 @@ public:
 			result.data[i] = data[i] / other;
 		}
 		return result;
+	}
+
+	Tensor2& operator/=(const T& other) {
+		for (int i = 0; i < this->shape[0]; ++i) {
+			data[i] /= other;
+		}
+		return *this;
 	}
 
 	void print(std::ostream& os) const override {
@@ -1080,6 +1110,13 @@ public:
 		return *this;
 	}
 
+	Tensor3& operator/=(const T& other) {
+		for (int i = 0; i < this->shape[0]; ++i) {
+			data[i] /= other;
+		}
+		return *this;
+	}
+
 	void print(std::ostream& os) const override {
 		os << "{\n";
 		for (int i = 0; i < this->shape[0]; ++i) {
@@ -1090,20 +1127,38 @@ public:
 		os << "}";
 	}
 
-	void setMatrix(Tensor2<T>& matrix, int matrixNumber) {
-		if (matrix.getShape()[0] != this->shape[1] || matrix.getShape()[1] != this->shape[2]) {
-			throw std::invalid_argument("Matrix dimensions must match tensor dimensions");
+	Tensor2<T> flatten(int axis = 0) {
+		if (axis == 0) {
+			std::vector<int> resultShape = { this->shape[0] * this->shape[1], this->shape[2] };
+			Tensor2<T> result(resultShape);
+			for (int i = 0; i < this->shape[0]; ++i) {
+				for (int j = 0; j < this->shape[1]; ++j) {
+					for (int k = 0; k < this->shape[2]; ++k) {
+						result({ i * this->shape[1] + j, k }) = data[i]({ j, k });
+					}
+				}
+			}
+			return result;
 		}
-		data[matrixNumber] = matrix;
+		else if (axis == 1) {
+			std::vector<int> resultShape = { this->shape[0], this->shape[1] * this->shape[2] };
+			Tensor2<T> result(resultShape);
+			for (int i = 0; i < this->shape[0]; ++i) {
+				for (int j = 0; j < this->shape[1]; ++j) {
+					for (int k = 0; k < this->shape[2]; ++k) {
+						result({ i, j * this->shape[2] + k }) = data[i]({ j, k });
+					}
+				}
+			}
+			return result;
+		}
+		else {
+			std::cerr << "Invalid axis\n";
+			throw std::invalid_argument("Invalid axis");
+		}
+
 	}
 
-	Tensor2<T> getMatrix(int matrixNumber) {
-		if (matrixNumber < 0 || matrixNumber >= this->shape[0]) {
-			throw std::out_of_range("Matrix index out of range");
-		}
-
-		return data[matrixNumber];
-	}
 
 	static Tensor3<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
 		// Implement dot product of two 3D tensors

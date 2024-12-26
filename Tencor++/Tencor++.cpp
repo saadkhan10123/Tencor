@@ -12,6 +12,8 @@
 
 #include "Layer.h"
 
+#include "MNISTDataLoader.h"
+
 using namespace std;
 
 void printVector(const vector<int>& vec) {
@@ -117,14 +119,39 @@ void testSoftmax() {
 	cout << applyActivation(t1, SOFTMAX) << endl;
 }
 
+void MNISTTest() {
+	std::string trainImagesPath = "D:\\NUST\\Semester 3\\Data Structures and Algorithms\\End Semester Project\\Dataset\\train-images-idx3-ubyte\\train-images-idx3-ubyte";
+	std::string trainLabelsPath = "D:\\NUST\\Semester 3\\Data Structures and Algorithms\\End Semester Project\\Dataset\\train-labels-idx1-ubyte\\train-labels-idx1-ubyte";
+    MNISTDataLoader testLoader(trainImagesPath, trainLabelsPath);
+	testLoader.printSummary();
+	testLoader.normalizeImages();
+
+	// Create a Sequential model
+	Sequential model;
+	model.add(new Dense(784, 128, Activation::RELU));
+	model.add(new Dense(128, 64, Activation::RELU));
+	model.add(new Dense(64, 10, Activation::SOFTMAX));
+
+	Tensor2<double> test = testLoader.getImages().flatten(1);
+	test = Tensor2<double>::transpose(test);
+	cout << test.shape[0] << " " << test.shape[1] << endl;
+
+	model.compile(new CategoricalCrossEntropy<double>());
+	model.fit(test, oneHotEncode(testLoader.getLabels().squeeze(), 10), 10, 0.001, 10);
+
+
+}
+
 int main() {
 	// test2DTensor();
 
-    testModel();
+    // testModel();
 
     //testDot();
 
     // testSoftmax();
+
+	MNISTTest();
 
     return 0;
 }
