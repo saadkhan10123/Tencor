@@ -10,6 +10,8 @@
 #include "Activation.h"
 #include "Loss.h"
 
+#include "Layer.h"
+
 using namespace std;
 
 void printVector(const vector<int>& vec) {

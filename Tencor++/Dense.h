@@ -12,6 +12,7 @@ public:
     }
 
     Tensor2<double> forward(const Tensor2<double>& input, bool training = false) override {
+		model->forwardStack.push(this);
         Tensor2<double> z = Tensor2<double>::dot(weights, input) + biases;
         Tensor2<double> a = applyActivation(z, activation);
 

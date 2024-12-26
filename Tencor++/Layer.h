@@ -53,9 +53,19 @@ Tensor2<double> applyActivationDerivative(const Tensor2<double>& dA, Tensor2<dou
 	}
 }
 
+class Model;
+
 class Layer {
 public:
 	virtual Tensor2<double> forward(const Tensor2<double>& input, bool training = false) = 0;
 	virtual Tensor2<double> backward(const Tensor2<double>& outputGradient, double learningRate) = 0;
 	//int getOutputSize();
+	void setModel(Model* model) {
+		this->model = model;
+	}
+
+protected:
+	Model* model;
 };
+
+#include "Model.h"

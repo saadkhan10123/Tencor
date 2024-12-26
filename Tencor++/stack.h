@@ -2,12 +2,12 @@
 #include <iostream>
 
 template <typename T>
-class Node {
+class StackNode {
 public:
     T data;          
-    Node* next;
+    StackNode* next;
 
-    Node(T data) {
+    StackNode(T data) {
         this->data = data;
         this->next = nullptr;
     }
@@ -24,16 +24,16 @@ public:
 
     
     ~Stack() {
-        Node<T>* current = top;
+        StackNode<T>* current = top;
         while (current != nullptr) {
-            Node<T>* temp = current;
+            StackNode<T>* temp = current;
             current = current->next;
             delete temp;
         }
     }
 
     void push(T data) {
-        Node<T>* newNode = new Node<T>(data);
+        StackNode<T>* newNode = new StackNode<T>(data);
         if (top == nullptr) {
             top = newNode; 
         } else {
@@ -47,7 +47,7 @@ public:
         if (isEmpty()) {
             throw std::runtime_error("Stack underflow: Cannot pop from an empty stack");
         }
-        Node<T>* temp = top;  
+        StackNode<T>* temp = top;  
         T poppedData = temp->data;
         top = top->next;       
         delete temp;           
@@ -71,7 +71,7 @@ public:
     }
 
     void print() const {
-        Node<T>* temp = top;
+        StackNode<T>* temp = top;
         std::cout << "[";
         while (temp != nullptr) {
             std::cout << temp->data << " ";
@@ -83,7 +83,7 @@ public:
     // Iterator class for stack traversal
     class Iterator {
     public:
-        Iterator(Node<T>* node) : current(node) {}
+        Iterator(StackNode<T>* node) : current(node) {}
 
         T& operator*() const {
             return current->data;
@@ -99,7 +99,7 @@ public:
         }
 
     private:
-        Node<T>* current; 
+        StackNode<T>* current; 
     };
 
     // Begin: Return an iterator to the top of the stack
@@ -113,6 +113,6 @@ public:
     }
 
 private:
-    Node<T>* top; 
+    StackNode<T>* top; 
     int size;   
 };
