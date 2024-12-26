@@ -329,6 +329,15 @@ public:
         os << " }";
     }
 
+	Tensor1 slice(int start, int end) const {
+		std::vector<int> resultShape = { end - start };
+		Tensor1 result(resultShape);
+		for (int i = start; i < end; ++i) {
+			result({ i - start }) = data[i];
+		}
+		return result;
+	}
+
     static Tensor1<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
         // Implement dot product of two 1D tensors
         const Tensor1<T>& t1 = dynamic_cast<const Tensor1<T>&>(tensor1);
@@ -705,6 +714,41 @@ public:
 		}
 		return result;
 	}
+
+	Tensor2 slice(int start, int end, int axis = 0) const {
+		if (axis == 0) {
+			if (start < 0 || start >= this->shape[0] || end < 0 || end > this->shape[0] || start >= end) {
+				std::cerr << "\nInvalid slice indices\n";
+				throw std::invalid_argument("Invalid slice indices");
+			}
+			std::vector<int> resultShape = { end - start, this->shape[1] };
+
+			Tensor2 result(resultShape);
+			for (int i = start; i < end; ++i) {
+				result.data[i - start] = data[i];
+			}
+			return result;
+		}
+		else if (axis == 1) {
+			if (start < 0 || start >= this->shape[1] || end < 0 || end > this->shape[1] || start >= end) {
+				std::cerr << "Invalid slice indices\n";
+				throw std::invalid_argument("Invalid slice indices");
+			}
+			std::vector<int> resultShape = { this->shape[0], end - start };
+
+			Tensor2 result(resultShape);
+			for (int i = 0; i < this->shape[0]; ++i) {
+				result.data[i] = data[i].slice(start, end);
+			}
+			return result;
+		}
+		else {
+			std::cerr << "Invalid axis\n";
+			throw std::invalid_argument("Invalid axis");
+		}
+	}
+
+
 
 	static Tensor2<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
 		// Implement dot product of two 2D tensors

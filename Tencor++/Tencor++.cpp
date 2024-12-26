@@ -74,7 +74,7 @@ void testModel() {
     model.compile(new CategoricalCrossEntropy<double>());
 
     // Train the model
-    model.fit(input, target, 20, 0.001);
+    model.fit(input, target, 20, 0.001, 1);
 
     // Test the model with a new tensor
 	Tensor2<double> test = {
