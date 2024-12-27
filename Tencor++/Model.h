@@ -13,6 +13,8 @@ private:
     int layerCount;
 
 public:
+    Model() : lossFunc(nullptr), layerCount(0) {} // Initialize layerCount to 0 and lossFunc to nullptr
+
     void addLayer(std::string name, Layer* layer) {
         layers[name] = layer;
         layer->setModel(this);
@@ -51,23 +53,21 @@ public:
         if (endOfEpoch) {
             std::cout << std::endl; // Print a newline at the end of the epoch
         }
+        std::cout.flush(); // Ensure the output is displayed immediately
     }
-
 
     void printEpochDetails(int epoch, int epochs, double loss) {
-		std::cout << "\rEpoch: " << epoch + 1 << " Epoch Loss: " << loss << std::endl << std::endl; // Print loss
+        std::cout << "\rEpoch: " << epoch + 1 << " Epoch Loss: " << loss << std::endl << std::endl; // Print loss
+        std::cout.flush(); // Ensure the output is displayed immediately
     }
-
 
     void fit(Tensor2<double> input, Tensor2<double> target, int epochs, double learningRate, int batchSize = -1) {
         if (batchSize == -1) {
             batchSize = input.getShape()[1];
-        }
-        else if (batchSize > input.getShape()[1]) {
+        } else if (batchSize > input.getShape()[1]) {
             std::cerr << "Batch size cannot be greater than the number of samples" << std::endl;
             throw std::invalid_argument("Batch size cannot be greater than the number of samples");
-        }
-        else if (batchSize <= 0) {
+        } else if (batchSize <= 0) {
             std::cerr << "Batch size must be greater than 0" << std::endl;
             throw std::invalid_argument("Batch size must be greater than 0");
         }
@@ -102,10 +102,9 @@ public:
             }
             double avgLoss = overallLoss / totalBatches;
             printProgress(i, epochs, input.getShape()[1], input.getShape()[1], avgLoss, true); // End of epoch
-			printEpochDetails(i, epochs, avgLoss);
+            printEpochDetails(i, epochs, avgLoss);
         }
     }
-
 
     void compile(Loss<double>* loss) {
         lossFunc = loss;
@@ -113,4 +112,3 @@ public:
 
     Stack<Layer*> forwardStack;
 };
-

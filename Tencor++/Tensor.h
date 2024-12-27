@@ -3,6 +3,7 @@
 #include <vector>
 #include <initializer_list>
 #include <cassert>
+#include <cmath>
 
 template <typename T> class Tensor1;
 template <typename T> class Tensor2;
@@ -265,6 +266,7 @@ public:
 			std::cerr << "Dimensions must match for subtraction\n";
 			throw std::invalid_argument("Dimensions must match for subtraction");
 		}
+		return *this;
 	}
 
 	
@@ -415,7 +417,7 @@ public:
 	static Tensor1<T> log(const Tensor1<T>& tensor) {
 		Tensor1<T> result(tensor.shape);
 		for (int i = 0; i < tensor.shape[0]; ++i) {
-			result({ i }) = std::log(tensor({ i }));
+			result({ i }) = std::clog(tensor({ i }));
 		}
 		return result;
 	}
@@ -480,6 +482,24 @@ public:
 	~Tensor2() {
 		delete[] data;
 	}
+
+	bool operator==(const Tensor2<T>& other) const {
+
+        if (this->shape != other.shape) return false;
+
+        for (int i = 0; i < this->shape[0]; ++i) {
+
+            for (int j = 0; j < this->shape[1]; ++j) {
+
+                if ((*this)({i, j}) != other({i, j})) return false;
+
+            }
+
+        }
+
+        return true;
+
+    }
 
 	Tensor2& operator=(const Tensor2& other) {
 		if (this == &other) {

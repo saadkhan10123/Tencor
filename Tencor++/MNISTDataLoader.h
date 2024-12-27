@@ -74,7 +74,7 @@ void MNISTDataLoader::loadImages(const std::string& imageFile) {
         throw std::runtime_error("Invalid magic number in image file");
     }
 
-    numImages = 100;
+    numImages = 50;
 
     images = Tensor3<double>({static_cast<int>(numImages), static_cast<int>(numRows), static_cast<int>(numCols)}, InitType::Default);
     for (uint32_t i = 0; i < numImages; ++i) {
@@ -104,7 +104,7 @@ void MNISTDataLoader::loadLabels(const std::string& labelFile) {
     magicNumber = reverseBytes(magicNumber);
     numLabels = reverseBytes(numLabels);
 
-	numLabels = 100;
+	numLabels = 50;
 
     if (magicNumber != 2049) {
 		std::cerr << "Invalid magic number in label file" << magicNumber << std::endl;
