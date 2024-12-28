@@ -13,66 +13,57 @@ public:
         cache = nullptr;
     }
 
-    // Save weights and biases to file
     void saveWeightsAndBiases(const std::string& weightsFile, const std::string& biasesFile) {
-        std::cout << "Attempting to save weights to " << weightsFile << " and biases to " << biasesFile << std::endl;
-
-        // Save weights
         std::ofstream weightsOut(weightsFile, std::ios::binary);
-        if (!weightsOut) {
-            std::cerr << "Error: Could not open weights file for writing.\n";
-            return;
+        std::ofstream biasesOut(biasesFile, std::ios::binary);
+
+        if (!weightsOut.is_open() || !biasesOut.is_open()) {
+            throw std::runtime_error("Error opening files for saving weights and biases");
         }
+
+        // Get the weights and biases from this layer
+        const auto& weights = this->getWeights();
+        const auto& biases = this->getBiases();
+
+        // Write the weights to the file
         for (int i = 0; i < weights.getShape()[0]; ++i) {
             for (int j = 0; j < weights.getShape()[1]; ++j) {
-                weightsOut.write(reinterpret_cast<char*>(&weights({i, j})), sizeof(double));
+                weightsOut.write(reinterpret_cast<const char*>(&weights({i, j})), sizeof(double));
             }
         }
-        weightsOut.close();
 
-        // Save biases
-        std::ofstream biasesOut(biasesFile, std::ios::binary);
-        if (!biasesOut) {
-            std::cerr << "Error: Could not open biases file for writing.\n";
-            return;
-        }
+        // Write the biases to the file
         for (int i = 0; i < biases.getShape()[0]; ++i) {
-            biasesOut.write(reinterpret_cast<char*>(&biases({i, 0})), sizeof(double));
+            biasesOut.write(reinterpret_cast<const char*>(&biases({i, 0})), sizeof(double));
         }
-        biasesOut.close();
-
-        std::cout << "Weights and biases successfully saved." << std::endl;
     }
 
-    // Load weights and biases from file
+    // Load weights and biases from files
     void loadWeightsAndBiases(const std::string& weightsFile, const std::string& biasesFile) {
-        std::cout << "Attempting to load weights from " << weightsFile << " and biases from " << biasesFile << std::endl;
-
-        // Load weights
         std::ifstream weightsIn(weightsFile, std::ios::binary);
-        if (!weightsIn) {
-            std::cerr << "Error: Could not open weights file for reading.\n";
-            return;
+        std::ifstream biasesIn(biasesFile, std::ios::binary);
+
+        if (!weightsIn.is_open() || !biasesIn.is_open()) {
+            throw std::runtime_error("Error opening files for loading weights and biases");
         }
+
+        // Get references to the weights and biases of the current layer
+        auto& weights = this->getWeights();
+        auto& biases = this->getBiases();
+
+        // Read the weights from the file
         for (int i = 0; i < weights.getShape()[0]; ++i) {
             for (int j = 0; j < weights.getShape()[1]; ++j) {
                 weightsIn.read(reinterpret_cast<char*>(&weights({i, j})), sizeof(double));
             }
         }
-        weightsIn.close();
 
-        // Load biases
-        std::ifstream biasesIn(biasesFile, std::ios::binary);
-        if (!biasesIn) {
-            std::cerr << "Error: Could not open biases file for reading.\n";
-            return;
-        }
+        // Read the biases from the file
         for (int i = 0; i < biases.getShape()[0]; ++i) {
             biasesIn.read(reinterpret_cast<char*>(&biases({i, 0})), sizeof(double));
         }
-        biasesIn.close();
 
-        std::cout << "Weights and biases successfully loaded." << std::endl;
+        std::cout << "Weights and biases loaded successfully for this layer." << std::endl;
     }
 
     Tensor2<double> forward(const Tensor2<double>& input, bool training = false) override {
@@ -115,7 +106,7 @@ public:
     }
 
     // Getter and Setter for weights and biases
-    Tensor2<double> getWeights() const {
+    Tensor2<double>& getWeights() {
         return weights;
     }
 
@@ -123,12 +114,15 @@ public:
         weights = newWeights;
     }
 
-    Tensor2<double> getBiases() const {
+    Tensor2<double>& getBiases() {
         return biases;
     }
 
     void setBiases(const Tensor2<double>& newBiases) {
         biases = newBiases;
+    }
+    std::string getName() const {
+        return name;
     }
 
     struct Cache {
@@ -143,4 +137,5 @@ private:
     Tensor2<double> biases;
     Activation activation;
     Cache* cache;
+    std::string name;
 };

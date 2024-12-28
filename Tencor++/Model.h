@@ -20,6 +20,9 @@ public:
         layer->setModel(this);
         layerCount++;
     }
+    const std::unordered_map<std::string, Layer*>& getLayers() const {
+        return layers;
+    }
 
     void addLayer(Layer* layer) {
         addLayer("layer " + std::to_string(layerCount), layer);

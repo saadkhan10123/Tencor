@@ -130,7 +130,7 @@ public:
         return *this;
     }
 
-    T& operator()(const std::vector<int>& indices) override {
+	T& operator()(const std::vector<int>& indices) {
         return data[indices[0]];
     }
 
@@ -1181,10 +1181,11 @@ public:
 
 
 	static Tensor3<T> dot(const Tensor<T>& tensor1, const Tensor<T>& tensor2) {
-		// Implement dot product of two 3D tensors
-		const Tensor3<T>& t1 = dynamic_cast<const Tensor3<T>&>(tensor1);
-		const Tensor3<T>& t2 = dynamic_cast<const Tensor3<T>&>(tensor2);
-	}
+			// Implement dot product of two 3D tensors
+			const Tensor3<T>& t1 = dynamic_cast<const Tensor3<T>&>(tensor1);
+			const Tensor3<T>& t2 = dynamic_cast<const Tensor3<T>&>(tensor2);
+			throw std::logic_error("Function not yet implemented");
+		}
 
 private:
 	Tensor2<T>* data = nullptr;

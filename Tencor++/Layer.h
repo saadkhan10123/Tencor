@@ -64,9 +64,8 @@ public:
 	void setModel(Model* model) {
 		this->model = model;
 	}
+		
 
 protected:
 	Model* model;
 };
-
-#include "Model.h"
