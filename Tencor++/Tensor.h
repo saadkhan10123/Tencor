@@ -83,8 +83,8 @@ public:
             break;
         case InitType::Random:
             for (int i = 0; i < shape[0]; ++i) {
-				// Random initialization between -1 and 1
-				data[i] = static_cast<T>(rand() % 2000 - 1000) / 1000;
+				// Random initialization between -0.5 and 0.5
+				data[i] = static_cast<T>(rand()) / RAND_MAX - 0.5;
             }
             break;
         default:
