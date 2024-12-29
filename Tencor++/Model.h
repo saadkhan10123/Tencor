@@ -1,14 +1,14 @@
 #pragma once
 #include <iostream>
-#include <unordered_map>
 #include <string>
 #include "Stack.h"
 #include "Loss.h"
 #include "Layer.h"
+#include "Hash.h"
 
 class Model {
 private:
-    std::unordered_map<std::string, Layer*> layers;
+	HashTable<Layer*> layers;
     Loss<double>* lossFunc;
     int layerCount;
 
@@ -16,11 +16,11 @@ public:
     Model() : lossFunc(nullptr), layerCount(0) {} // Initialize layerCount to 0 and lossFunc to nullptr
 
     void addLayer(std::string name, Layer* layer) {
-        layers[name] = layer;
+		layers.put(name, layer);
         layer->setModel(this);
         layerCount++;
     }
-    const std::unordered_map<std::string, Layer*>& getLayers() const {
+    const HashTable<Layer*>& getLayers() const {
         return layers;
     }
 

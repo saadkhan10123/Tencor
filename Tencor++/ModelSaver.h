@@ -14,8 +14,7 @@ public:
     ModelSaver() {}
 
     // Save weights and biases to hash table and files
-    void saveWeightsAndBiases(const Model& model, HashTable& hashTable, 
-                              const std::string& weightsFile, const std::string& biasesFile) {
+    void saveWeightsAndBiases(const Model& model, const std::string& weightsFile, const std::string& biasesFile) {
         std::cout << "Saving weights and biases to hash table and files.\n";
 
         std::ofstream weightsOut(weightsFile, std::ios::binary);
@@ -31,10 +30,6 @@ public:
                 const auto& weights = denseLayer->getWeights();
                 const auto& biases = denseLayer->getBiases();
 
-                // Store in hash table
-                hashTable.insert(denseLayer->getName() + "_weights",tensorToVector(weights) );
-                hashTable.insert(denseLayer->getName() + "_biases", tensorToVector(biases));
-
                 // Write to files
                 writeTensorToFile(weights, weightsOut);
                 writeTensorToFile(biases, biasesOut);
@@ -47,8 +42,7 @@ public:
     }
 
     // Load weights and biases from hash table and files
-    void loadWeightsAndBiases(Model& model, HashTable& hashTable, 
-                              const std::string& weightsFile, const std::string& biasesFile) {
+    void loadWeightsAndBiases(Model& model, const std::string& weightsFile, const std::string& biasesFile) {
         std::cout << "Loading weights and biases from hash table and files.\n";
 
         std::ifstream weightsIn(weightsFile, std::ios::binary);
@@ -58,15 +52,11 @@ public:
             throw std::runtime_error("Failed to open weights or biases file for reading.");
         }
 
-        for (auto& layerPair : model.getLayers()) {
+        for (const auto& layerPair : model.getLayers()) {
             if (Dense* denseLayer = dynamic_cast<Dense*>(layerPair.second)) {
                 // Read from files
                 auto weights = readTensorFromFile(weightsIn);
                 auto biases = readTensorFromFile(biasesIn);
-
-                // Store in hash table
-                hashTable.insert(denseLayer->getName() + "_weights", tensorToVector(weights));
-                hashTable.insert(denseLayer->getName() + "_biases", tensorToVector(biases));
 
                 // Set the layer's weights and biases
                 denseLayer->setWeights(weights);
@@ -80,10 +70,9 @@ public:
     }
 
     // Save weights and biases after a training step
-    void saveAfterTrainingStep(const Model& model, HashTable& hashTable, 
-                               const std::string& weightsFile, const std::string& biasesFile, int epoch) {
+    void saveAfterTrainingStep(const Model& model, const std::string& weightsFile, const std::string& biasesFile, int epoch) {
         std::cout << "Saving weights and biases after epoch " << epoch << ".\n";
-        saveWeightsAndBiases(model, hashTable, weightsFile, biasesFile);
+        saveWeightsAndBiases(model, weightsFile, biasesFile);
     }
 
 private:
