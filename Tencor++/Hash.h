@@ -1,40 +1,39 @@
-#pragma once
-#include <vector>
+#ifndef HASH_H
+#define HASH_H
+
+#include <unordered_map>
 #include <string>
-#include <utility>  // For std::pair
-#include "Tensor.h"
+#include <vector>
+#include <stdexcept>
 
-template <typename K, typename V>
-class CustomHashMap {
+class HashTable {
 public:
-    void insert(const K& key, const V& value) {
-        for (auto& pair : map) {
-            if (pair.first == key) {
-                pair.second = value;
-                return;
-            }
+    // Insert a key-value pair into the hash table
+    void insert(const std::string& key, const std::vector<double>& value) {
+        table[key] = value;
+    }
+
+    // Remove a key-value pair from the hash table
+    void remove(const std::string& key) {
+        table.erase(key);
+    }
+
+    // Retrieve a value by key from the hash table
+    std::vector<double> get(const std::string& key) const {
+        auto it = table.find(key);
+        if (it != table.end()) {
+            return it->second;
         }
-        map.emplace_back(key, value);
+        throw std::runtime_error("Key not found");
     }
 
-    bool get(const K& key, V& value) const {
-        for (const auto& pair : map) {
-            if (pair.first == key) {
-                value = pair.second;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void clear() {
-        map.clear();
-    }
-
-    const std::vector<std::pair<K, V>>& getMap() const {
-        return map;
+    // Check if a key exists in the hash table
+    bool contains(const std::string& key) const {
+        return table.find(key) != table.end();
     }
 
 private:
-    std::vector<std::pair<K, V>> map;
+    std::unordered_map<std::string, std::vector<double>> table;
 };
+
+#endif // HASH_H
