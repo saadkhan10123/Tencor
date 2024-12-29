@@ -362,3 +362,5 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Tencor++/Tencor++.vcxproj
+/Tencor++/biases.dat
+/Tencor++/weights.dat
