@@ -23,12 +23,10 @@ public:
     const HashTable<Layer*>& getLayers() const {
         return layers;
     }
-
     void addLayer(Layer* layer) {
         addLayer("layer " + std::to_string(layerCount), layer);
         layer->setModel(this);
     }
-
     virtual Tensor2<double> forward(Tensor2<double> input, bool training = false) = 0;
 
     void backward(Tensor2<double> grad, double learningRate) {
@@ -37,7 +35,6 @@ public:
             grad = layer->backward(grad, learningRate);
         }
     }
-
     void printProgress(int epoch, int epochs, int batch, int total, double loss, bool endOfEpoch = false) {
         int progressBarWidth = 50; // Width of the progress bar
         float progress = static_cast<float>(batch) / total; // Calculate progress
@@ -63,7 +60,6 @@ public:
         std::cout << "\rEpoch: " << epoch + 1 << " Epoch Loss: " << loss << std::endl << std::endl; // Print loss
         std::cout.flush(); // Ensure the output is displayed immediately
     }
-
     void fit(Tensor2<double> input, Tensor2<double> target, int epochs, double learningRate, int batchSize = -1) {
         if (batchSize == -1) {
             batchSize = input.getShape()[1];
